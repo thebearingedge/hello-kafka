@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    "ms-azuretools.vscode-docker",
+    "rust-lang.rust-analyzer",
+    "tamasfe.even-better-toml",
+    "timonwong.shellcheck"
+  ]
+}
