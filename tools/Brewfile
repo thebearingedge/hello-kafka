@@ -1,0 +1,5 @@
+tap "f1bonacc1/tap"
+
+brew "cmake"
+brew "shellcheck"
+brew "f1bonacc1/tap/process-compose", trusted: true

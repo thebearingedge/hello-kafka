@@ -4,5 +4,10 @@ version.workspace = true
 edition.workspace = true
 publish.workspace = true
 
+[dependencies]
+anyhow.workspace = true
+rdkafka.workspace = true
+tokio.workspace = true
+
 [lints]
 workspace = true

@@ -1,0 +1,53 @@
+services:
+  openssl:
+    image: docker.io/alpine/openssl:3.5.9
+    volumes:
+      - ./infrastructure/openssl/generate-certs.sh:/tmp/generate-certs.sh:ro
+      - ./infrastructure/openssl/certs:/tmp/certs
+    entrypoint: /tmp/generate-certs.sh
+
+  kafka:
+    image: docker.io/apache/kafka:4.4.0
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9094
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENERS: HOST://:9093,INTERNAL://:9092,CONTROLLER://:9094
+      KAFKA_ADVERTISED_LISTENERS: HOST://localhost:9093,INTERNAL://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: HOST:SSL,INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_SSL_KEYSTORE_TYPE: PEM
+      KAFKA_SSL_KEYSTORE_LOCATION: /tmp/certs/broker-keystore.pem
+      KAFKA_SSL_TRUSTSTORE_TYPE: PEM
+      KAFKA_SSL_TRUSTSTORE_LOCATION: /tmp/certs/ca.pem
+      KAFKA_SSL_CLIENT_AUTH: required
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    tmpfs: /var/lib/kafka/data:uid=1000,gid=1000,mode=0755
+    volumes:
+      - ./infrastructure/openssl/certs:/tmp/certs:ro
+    ports:
+      - 127.0.0.1:9093:9093
+    healthcheck:
+      test: nc -z localhost 9093 || exit 1
+      start_period: 5s
+      interval: 5s
+      retries: 10
+      timeout: 5s
+    depends_on:
+      openssl:
+        condition: service_completed_successfully
+
+  kafka-init:
+    image: docker.io/apache/kafka:4.4.0
+    volumes:
+      - ./infrastructure/kafka-init/create-topics.sh:/tmp/create-topics.sh:ro
+    entrypoint: /tmp/create-topics.sh
+    depends_on:
+      kafka:
+        condition: service_healthy
+

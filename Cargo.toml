@@ -8,6 +8,10 @@ edition = "2024"
 publish = false
 
 [workspace.dependencies]
+anyhow = "1.0.104"
+rdkafka = { version = "0.39.0", features = ["cmake-build", "ssl"] }
+tokio = { version = "1.54.1", features = ["macros", "rt-multi-thread"] }
+tracing-subscriber = "0.3.23"
 
 [workspace.lints.clippy]
 pedantic = { level = "warn", priority = -1 }
