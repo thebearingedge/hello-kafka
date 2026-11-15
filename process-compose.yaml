@@ -7,6 +7,7 @@ processes:
       - SSL_CERT_LOCATION=${PWD}/infrastructure/openssl/certs/client.pem
     availability:
       restart: on_failure
+    namespace: example
   producer:
     command: cargo run -p producer
     environment:
@@ -15,3 +16,18 @@ processes:
       - SSL_CERT_LOCATION=${PWD}/infrastructure/openssl/certs/client.pem
     availability:
       restart: on_failure
+    namespace: example
+  simple-consumer:
+    command: cargo run -p simple-consumer
+    environment:
+      - BROKER_ADDRESS=localhost:9091
+    availability:
+      restart: on_failure
+    namespace: simple
+  simple-producer:
+    command: cargo run -p simple-producer
+    environment:
+      - BROKER_ADDRESS=localhost:9091
+    availability:
+      restart: on_failure
+    namespace: simple

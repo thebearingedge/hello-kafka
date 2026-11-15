@@ -27,10 +27,10 @@ async fn main() -> anyhow::Result<()> {
         .expect("failed to create consumer client");
 
     consumer
-        .subscribe(&["main"])
-        .expect("failed to subscribe to topic 'main'");
+        .subscribe(&["events"])
+        .expect("failed to subscribe to topic 'events'");
 
-    println!("consuming topic 'main'...");
+    println!("consuming topic 'events'...");
 
     loop {
         match consumer.recv().await {

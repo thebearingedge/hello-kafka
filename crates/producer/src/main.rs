@@ -35,7 +35,7 @@ async fn main() -> anyhow::Result<()> {
 
         let payload = serde_json::to_string(&event).unwrap();
 
-        let record = FutureRecord::to("main").key("0").payload(&payload);
+        let record = FutureRecord::to("events").key("0").payload(&payload);
 
         if let Err((e, _)) = producer.send(record, time::Duration::from_secs(0)).await {
             return Err(e)?;
