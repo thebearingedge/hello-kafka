@@ -2,8 +2,16 @@ processes:
   consumer:
     command: cargo run -p consumer
     environment:
+      - SSL_CA_LOCATION=${PWD}/infrastructure/openssl/certs/ca.pem
       - SSL_KEY_LOCATION=${PWD}/infrastructure/openssl/certs/client.key
       - SSL_CERT_LOCATION=${PWD}/infrastructure/openssl/certs/client.pem
+    availability:
+      restart: on_failure
+  producer:
+    command: cargo run -p producer
+    environment:
       - SSL_CA_LOCATION=${PWD}/infrastructure/openssl/certs/ca.pem
+      - SSL_KEY_LOCATION=${PWD}/infrastructure/openssl/certs/client.key
+      - SSL_CERT_LOCATION=${PWD}/infrastructure/openssl/certs/client.pem
     availability:
       restart: on_failure

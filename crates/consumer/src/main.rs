@@ -1,5 +1,7 @@
-use rdkafka::consumer::{Consumer, StreamConsumer};
+use rdkafka::consumer::{CommitMode, Consumer, StreamConsumer};
 use rdkafka::{ClientConfig, Message};
+
+use event::Event;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -17,12 +19,12 @@ async fn main() -> anyhow::Result<()> {
         .set("group.id", "main")
         .set("security.protocol", "ssl")
         .set("ssl.ca.location", ssl_ca_location)
-        .set("ssl.certificate.location", ssl_cert_location)
-        .set("ssl.key.location", ssl_key_location);
+        .set("ssl.key.location", ssl_key_location)
+        .set("ssl.certificate.location", ssl_cert_location);
 
     let consumer = config
         .create::<StreamConsumer>()
-        .expect("failed to create client");
+        .expect("failed to create consumer client");
 
     consumer
         .subscribe(&["main"])
@@ -32,13 +34,29 @@ async fn main() -> anyhow::Result<()> {
 
     loop {
         match consumer.recv().await {
-            Err(e) => eprintln!("kafka error: {e}"),
-            Ok(message) => match message.payload() {
-                None => {}
-                Some(payload) => {
-                    println!("payload: {:?}", payload);
+            Err(e) => eprintln!("recv error: {e}"),
+            Ok(message) => {
+                let event = match message.payload_view::<str>() {
+                    None => continue,
+                    Some(Err(e)) => {
+                        eprintln!("error deserializing payload: {e}");
+                        continue;
+                    }
+                    Some(Ok(payload)) => match serde_json::from_str::<Event>(payload) {
+                        Ok(event) => event,
+                        Err(e) => {
+                            eprintln!("error deserializing payload: {e}");
+                            continue;
+                        }
+                    },
+                };
+
+                println!("received event: {:?}", event);
+
+                if let Err(e) = consumer.commit_message(&message, CommitMode::Async) {
+                    eprintln!("error committing message - key: {:?}: {e}", message.key());
                 }
-            },
+            }
         }
     }
 }
